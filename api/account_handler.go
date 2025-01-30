@@ -57,3 +57,27 @@ func (s *server) getAccountHandler(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, account)
 }
+
+type listAccountsParams struct {
+	Page    int32 `form:"page" binding:"required,min=1"`
+	PerPage int32 `form:"per_page" binding:"required,min=5,max=10"`
+}
+
+func (s *server) ListAccountsHandler(ctx *gin.Context) {
+	var params listAccountsParams
+	if err := ctx.ShouldBindQuery(&params); err != nil {
+		ctx.JSON(http.StatusBadRequest, s.errorResponse(err))
+		return
+	}
+
+	accounts, err := s.store.ListAccounts(ctx, db.ListAccountsParams{
+		Limit:  params.PerPage,
+		Offset: (params.Page - 1) * params.PerPage,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, s.errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, accounts)
+}
