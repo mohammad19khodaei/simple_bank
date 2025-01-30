@@ -17,6 +17,7 @@ func NewServer(pool *pgxpool.Pool) *server {
 	}
 	r := gin.Default()
 	r.POST("/accounts", server.createAccountHandler)
+	r.GET("/accounts/:id", server.getAccountHandler)
 
 	server.server = r
 	return server
