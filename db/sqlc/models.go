@@ -9,26 +9,26 @@ import (
 )
 
 type Account struct {
-	ID        int32
-	Owner     string
-	Balance   int64
-	Currency  string
-	CreatedAt pgtype.Timestamptz
+	ID        int32              `json:"id"`
+	Owner     string             `json:"owner"`
+	Balance   int64              `json:"balance"`
+	Currency  string             `json:"currency"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type Entry struct {
-	ID        int32
-	AccountID int32
+	ID        int32 `json:"id"`
+	AccountID int32 `json:"account_id"`
 	// can be negative or positive
-	Amount    int64
-	CreatedAt pgtype.Timestamptz
+	Amount    int64              `json:"amount"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type Transfer struct {
-	ID            int32
-	FromAccountID int32
-	ToAccountID   int32
+	ID            int32 `json:"id"`
+	FromAccountID int32 `json:"from_account_id"`
+	ToAccountID   int32 `json:"to_account_id"`
 	// must be positive
-	Amount    int64
-	CreatedAt pgtype.Timestamptz
+	Amount    int64              `json:"amount"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }

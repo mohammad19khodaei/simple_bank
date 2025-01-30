@@ -9,12 +9,14 @@ import (
 )
 
 type Store struct {
+	*Queries
 	pool *pgxpool.Pool
 }
 
 func NewStore(pool *pgxpool.Pool) *Store {
 	return &Store{
-		pool: pool,
+		Queries: New(pool),
+		pool:    pool,
 	}
 }
 

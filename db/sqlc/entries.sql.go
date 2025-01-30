@@ -16,8 +16,8 @@ returning id, account_id, amount, created_at
 `
 
 type CreateEntryParams struct {
-	AccountID int32
-	Amount    int64
+	AccountID int32 `json:"account_id"`
+	Amount    int64 `json:"amount"`
 }
 
 func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error) {
