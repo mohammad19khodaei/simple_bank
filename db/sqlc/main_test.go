@@ -8,11 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
-)
-
-// urlExample := "postgres://username:password@localhost:5432/database_name"
-const (
-	connectionString = "postgres://root:secret@localhost:5432/simple_bank?sslmode=disable"
+	"github.com/mohammad19khodaei/simple_bank/utils"
 )
 
 var (
@@ -21,10 +17,13 @@ var (
 )
 
 func TestMain(t *testing.M) {
-	var err error
-	ctx := context.Background()
+	config, err := utils.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("could not load config", err)
+	}
 
-	testPool, err = pgxpool.New(ctx, connectionString)
+	ctx := context.Background()
+	testPool, err = pgxpool.New(ctx, config.DBSource)
 	if err != nil {
 		log.Fatal(err)
 	}
