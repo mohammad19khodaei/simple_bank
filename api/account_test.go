@@ -12,7 +12,6 @@ import (
 	"github.com/mohammad19khodaei/simple_bank/api"
 	mockdb "github.com/mohammad19khodaei/simple_bank/db/mock"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
-	"github.com/mohammad19khodaei/simple_bank/utils"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -103,13 +102,4 @@ func TestGetAccount(t *testing.T) {
 		})
 	}
 
-}
-
-func createRandomAccount() db.Account {
-	return db.Account{
-		ID:       int32(utils.RandomInt(1, 1000)),
-		Owner:    utils.RandomOwner(),
-		Currency: utils.RandomCurrency(),
-		Balance:  utils.RandomMoney(),
-	}
 }
