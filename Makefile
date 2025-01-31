@@ -20,3 +20,6 @@ test:
 
 server:
 	go run main.go
+
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github.com/mohammad19khodaei/simple_bank/db/sqlc Store
