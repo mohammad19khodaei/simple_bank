@@ -2,10 +2,13 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
 )
 
@@ -27,6 +30,15 @@ func (s *server) createAccountHandler(ctx *gin.Context) {
 		Balance:  0,
 	})
 	if err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				ctx.JSON(http.StatusConflict, s.errorResponse(fmt.Errorf("Account already exists with the same owner and currency")))
+			case pgerrcode.ForeignKeyViolation:
+				ctx.JSON(http.StatusBadRequest, s.errorResponse(fmt.Errorf("Owner does not exist")))
+			}
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, s.errorResponse(err))
 		return
 	}

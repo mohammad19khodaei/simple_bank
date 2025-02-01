@@ -41,6 +41,6 @@ func (s *server) GetRouter() *gin.Engine {
 
 func (s *server) errorResponse(err error) gin.H {
 	return gin.H{
-		"message": err.Error(),
+		"error": err.Error(),
 	}
 }
