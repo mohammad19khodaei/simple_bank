@@ -3,7 +3,6 @@ package api_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -145,7 +144,6 @@ func TestTransfer(t *testing.T) {
 			Amount:        tc.amount,
 		}
 		jsonData, err := json.Marshal(requestBody)
-		fmt.Println(string(jsonData))
 		require.NoError(t, err)
 		request := httptest.NewRequest(http.MethodPost, "/transfer", bytes.NewReader(jsonData))
 		request.Header.Set("Content-Type", "application/json")
