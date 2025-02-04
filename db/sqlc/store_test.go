@@ -2,7 +2,6 @@ package db_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
@@ -13,7 +12,6 @@ func TestCreateTransferTx(t *testing.T) {
 	store := db.NewStore(testPool)
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	fmt.Println(">> before", account1.Balance, account2.Balance)
 
 	num := 5
 	amount := int64(10)
@@ -77,8 +75,6 @@ func TestCreateTransferTx(t *testing.T) {
 		require.NotEmpty(t, toAccount)
 		require.Equal(t, account2.ID, toAccount.ID)
 
-		fmt.Println(">> tx ", i, fromAccount.Balance, toAccount.Balance)
-
 		// check account's balances
 		diff1 := account1.Balance - fromAccount.Balance
 		diff2 := toAccount.Balance - account2.Balance
@@ -98,8 +94,6 @@ func TestCreateTransferTx(t *testing.T) {
 	updatedAccount2, err := testQueries.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
-	fmt.Println(">> after", updatedAccount1.Balance, updatedAccount2.Balance)
-
 	require.Equal(t, account1.Balance-amount*int64(num), updatedAccount1.Balance)
 	require.Equal(t, account2.Balance+amount*int64(num), updatedAccount2.Balance)
 }
@@ -113,7 +107,6 @@ func TestCreateTransferTxDeadLock(t *testing.T) {
 	store := db.NewStore(testPool)
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	fmt.Println(">> before", account1.Balance, account2.Balance)
 
 	num := 10
 	amount := int64(10)
@@ -146,8 +139,6 @@ func TestCreateTransferTxDeadLock(t *testing.T) {
 
 	updatedAccount2, err := testQueries.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
-
-	fmt.Println(">> after", updatedAccount1.Balance, updatedAccount2.Balance)
 
 	require.Equal(t, account1.Balance, updatedAccount1.Balance)
 	require.Equal(t, account2.Balance, updatedAccount2.Balance)
