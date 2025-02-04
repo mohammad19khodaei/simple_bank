@@ -98,7 +98,7 @@ func TestGetAccount(t *testing.T) {
 			url := fmt.Sprintf("/accounts/%d", testCase.accountID)
 			request := httptest.NewRequest(http.MethodGet, url, nil)
 
-			server.GetRouter().ServeHTTP(recorder, request)
+			server.Router().ServeHTTP(recorder, request)
 			testCase.checkResponse(t, recorder)
 		})
 	}

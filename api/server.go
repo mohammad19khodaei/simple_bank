@@ -55,7 +55,7 @@ func (s *server) Start(address string) error {
 	return s.router.Run(address)
 }
 
-func (s *server) GetRouter() *gin.Engine {
+func (s *server) Router() *gin.Engine {
 	return s.router
 }
 

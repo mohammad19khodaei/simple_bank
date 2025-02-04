@@ -107,7 +107,7 @@ func TestCreateUser(t *testing.T) {
 		require.NoError(t, err)
 		request := httptest.NewRequest(http.MethodPost, "/users", bytes.NewReader(jsonData))
 
-		server.GetRouter().ServeHTTP(recorder, request)
+		server.Router().ServeHTTP(recorder, request)
 		tc.checkResponse(t, recorder, tc.params)
 	}
 
@@ -202,7 +202,7 @@ func TestLogin(t *testing.T) {
 			require.NoError(t, err)
 			request := httptest.NewRequest(http.MethodPost, "/users/login", bytes.NewReader(jsonData))
 
-			server.GetRouter().ServeHTTP(recorder, request)
+			server.Router().ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder, tc.params)
 		})
 	}

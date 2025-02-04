@@ -187,7 +187,7 @@ func TestTransfer(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/transfer", bytes.NewReader(jsonData))
 			request.Header.Set("Content-Type", "application/json")
 
-			server.GetRouter().ServeHTTP(recorder, request)
+			server.Router().ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder, tc.params)
 		})
 	}
