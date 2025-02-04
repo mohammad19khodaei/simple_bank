@@ -1,10 +1,12 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
@@ -18,7 +20,7 @@ type createUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 }
 
-type CreateUserResponse struct {
+type UserResponse struct {
 	Username          string             `json:"username"`
 	FullName          string             `json:"full_name"`
 	Email             string             `json:"email"`
@@ -58,13 +60,65 @@ func (s *server) createUserHandler(ctx *gin.Context) {
 		return
 	}
 
-	resp := CreateUserResponse{
+	resp := createUserResponse(user)
+	ctx.JSON(http.StatusCreated, resp)
+}
+
+type loginRequest struct {
+	Username string `json:"username" biding:"required,alphanum"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type LoginResponse struct {
+	AccessToken string       `json:"access_token"`
+	User        UserResponse `json:"user"`
+}
+
+func (s *server) login(ctx *gin.Context) {
+	var request loginRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, s.errorResponse(err))
+		return
+	}
+
+	user, err := s.store.GetUser(ctx, request.Username)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"error": "username or password is incorrect",
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, s.errorResponse(err))
+		return
+	}
+
+	if !utils.IsHashPasswordValid(user.HashedPassword, request.Password) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "username or password is incorrect",
+		})
+		return
+	}
+
+	token, err := s.tokenMaker.GenerateToken(user.Username, s.config.TokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, s.errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, LoginResponse{
+		AccessToken: token,
+		User:        createUserResponse(user),
+	})
+}
+
+func createUserResponse(user db.User) UserResponse {
+	return UserResponse{
 		Username:          user.Username,
 		FullName:          user.FullName,
 		Email:             user.Email,
 		PasswordChangedAt: user.PasswordChangedAt,
 		CreatedAt:         user.CreatedAt,
 	}
-
-	ctx.JSON(http.StatusCreated, resp)
 }

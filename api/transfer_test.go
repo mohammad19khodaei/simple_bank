@@ -178,7 +178,8 @@ func TestTransfer(t *testing.T) {
 		store := mockdb.NewMockStore(ctrl)
 		tc.buildStubs(store)
 
-		server := api.NewServer(store)
+		server, err := api.NewServer(config, store)
+		require.NoError(t, err)
 		recorder := httptest.NewRecorder()
 		jsonData, err := json.Marshal(tc.params)
 		require.NoError(t, err)

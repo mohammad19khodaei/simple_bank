@@ -17,7 +17,7 @@ var (
 )
 
 func TestMain(t *testing.M) {
-	config, err := utils.LoadConfig("../..")
+	config, err := utils.LoadConfig("../..", "app")
 	if err != nil {
 		log.Fatal("could not load config", err)
 	}

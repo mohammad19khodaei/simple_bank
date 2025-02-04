@@ -6,30 +6,49 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/mohammad19khodaei/simple_bank/api/validators"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
+	"github.com/mohammad19khodaei/simple_bank/token"
+	"github.com/mohammad19khodaei/simple_bank/utils"
 )
 
 type server struct {
-	store  db.Store
-	router *gin.Engine
+	store      db.Store
+	tokenMaker token.Maker
+	config     utils.Config
+	router     *gin.Engine
 }
 
-func NewServer(store db.Store) *server {
-	server := &server{store: store}
-
-	r := gin.Default()
+func NewServer(config utils.Config, store db.Store) (*server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.SecretKey)
+	if err != nil {
+		return nil, err
+	}
+	server := &server{
+		tokenMaker: tokenMaker,
+		config:     config,
+		store:      store,
+	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validators.CurrencyValidator)
 	}
-	r.POST("/users", server.createUserHandler)
 
-	r.POST("/accounts", server.createAccountHandler)
-	r.GET("/accounts/:id", server.getAccountHandler)
-	r.GET("/accounts", server.ListAccountsHandler)
-	r.POST("/transfer", server.transferHandler)
+	server.registerRouter()
 
-	server.router = r
-	return server
+	return server, nil
+}
+
+func (s *server) registerRouter() {
+	r := gin.Default()
+
+	r.POST("/users", s.createUserHandler)
+	r.POST("/users/login", s.login)
+
+	r.POST("/accounts", s.createAccountHandler)
+	r.GET("/accounts/:id", s.getAccountHandler)
+	r.GET("/accounts", s.ListAccountsHandler)
+	r.POST("/transfer", s.transferHandler)
+
+	s.router = r
 }
 
 func (s *server) Start(address string) error {

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	config, err := utils.LoadConfig(".")
+	config, err := utils.LoadConfig(".", "app")
 	if err != nil {
 		log.Fatal("could not load config")
 	}
@@ -21,7 +21,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := api.NewServer(db.NewStore(connPool))
+	server, err := api.NewServer(config, db.NewStore(connPool))
+	if err != nil {
+		log.Fatal("could not create start", err)
+	}
+
 	if err := server.Start(config.ServerAddress); err != nil {
 		log.Fatal("could not start server", err)
 	}
