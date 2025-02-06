@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,8 +12,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mohammad19khodaei/simple_bank/api"
+	"github.com/mohammad19khodaei/simple_bank/api/middlewares"
 	mockdb "github.com/mohammad19khodaei/simple_bank/db/mock"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
+	"github.com/mohammad19khodaei/simple_bank/token"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -25,6 +28,7 @@ func TestTransfer(t *testing.T) {
 	testCases := []struct {
 		name          string
 		params        transferRequest
+		setAuthHeader func(maker token.Maker, req *http.Request)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder, param transferRequest)
 	}{
@@ -34,6 +38,11 @@ func TestTransfer(t *testing.T) {
 				FromAccountID: fromAccount.ID,
 				ToAccountID:   toAccount.ID,
 				Amount:        10,
+			},
+			setAuthHeader: func(tokenMaker token.Maker, req *http.Request) {
+				token, err := tokenMaker.GenerateToken(fromAccount.Owner, config.TokenDuration)
+				require.NoError(t, err)
+				req.Header.Set("Authorization", fmt.Sprintf("%s %s", middlewares.AuthorizationTypeBearer, token))
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -52,6 +61,11 @@ func TestTransfer(t *testing.T) {
 				ToAccountID:   toAccount.ID,
 				Amount:        fromAccount.Balance + 10,
 			},
+			setAuthHeader: func(tokenMaker token.Maker, req *http.Request) {
+				token, err := tokenMaker.GenerateToken(fromAccount.Owner, config.TokenDuration)
+				require.NoError(t, err)
+				req.Header.Set("Authorization", fmt.Sprintf("%s %s", middlewares.AuthorizationTypeBearer, token))
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), fromAccount.ID).
@@ -68,6 +82,11 @@ func TestTransfer(t *testing.T) {
 				FromAccountID: fromAccount.ID,
 				ToAccountID:   toAccount.ID,
 				Amount:        10,
+			},
+			setAuthHeader: func(tokenMaker token.Maker, req *http.Request) {
+				token, err := tokenMaker.GenerateToken(fromAccount.Owner, config.TokenDuration)
+				require.NoError(t, err)
+				req.Header.Set("Authorization", fmt.Sprintf("%s %s", middlewares.AuthorizationTypeBearer, token))
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -91,6 +110,11 @@ func TestTransfer(t *testing.T) {
 				ToAccountID:   toEURAccount.ID,
 				Amount:        10,
 			},
+			setAuthHeader: func(tokenMaker token.Maker, req *http.Request) {
+				token, err := tokenMaker.GenerateToken(fromAccount.Owner, config.TokenDuration)
+				require.NoError(t, err)
+				req.Header.Set("Authorization", fmt.Sprintf("%s %s", middlewares.AuthorizationTypeBearer, token))
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), fromAccount.ID).
@@ -112,6 +136,11 @@ func TestTransfer(t *testing.T) {
 				FromAccountID: fromAccount.ID,
 				ToAccountID:   toAccount.ID,
 				Amount:        10,
+			},
+			setAuthHeader: func(tokenMaker token.Maker, req *http.Request) {
+				token, err := tokenMaker.GenerateToken(fromAccount.Owner, config.TokenDuration)
+				require.NoError(t, err)
+				req.Header.Set("Authorization", fmt.Sprintf("%s %s", middlewares.AuthorizationTypeBearer, token))
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -171,22 +200,28 @@ func TestTransfer(t *testing.T) {
 		},
 	}
 
+	tokenMaker, err := token.NewPasetoMaker(config.SecretKey)
+	require.NoError(t, err)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdb.NewMockStore(ctrl)
+
+	server, err := api.NewServer(config, store)
+	require.NoError(t, err)
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server, err := api.NewServer(config, store)
-			require.NoError(t, err)
 			recorder := httptest.NewRecorder()
 			jsonData, err := json.Marshal(tc.params)
 			require.NoError(t, err)
 			request := httptest.NewRequest(http.MethodPost, "/transfer", bytes.NewReader(jsonData))
 			request.Header.Set("Content-Type", "application/json")
 
+			tc.setAuthHeader(tokenMaker, request)
 			server.Router().ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder, tc.params)
 		})

@@ -1,6 +1,7 @@
 package token
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,7 +16,7 @@ type JWTMaker struct {
 
 func NewJWTMaker(secretKey string) (Maker, error) {
 	if len(secretKey) < minSecretLength {
-		return nil, fmt.Errorf("valid secret key size must be at least %d characters", minSecretLength)
+		return nil, errors.New(fmt.Sprintf("valid secret key size must be at least %d characters", minSecretLength))
 	}
 	return &JWTMaker{
 		secretKey: secretKey,

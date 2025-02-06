@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/mohammad19khodaei/simple_bank/api/middlewares"
 	"github.com/mohammad19khodaei/simple_bank/api/validators"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
 	"github.com/mohammad19khodaei/simple_bank/token"
@@ -43,10 +44,12 @@ func (s *server) registerRouter() {
 	r.POST("/users", s.createUserHandler)
 	r.POST("/users/login", s.login)
 
-	r.POST("/accounts", s.createAccountHandler)
-	r.GET("/accounts/:id", s.getAccountHandler)
-	r.GET("/accounts", s.ListAccountsHandler)
-	r.POST("/transfer", s.transferHandler)
+	authRoutes := r.Group("/").Use(middlewares.AuthMiddleware(s.tokenMaker))
+
+	authRoutes.POST("/accounts", s.createAccountHandler)
+	authRoutes.GET("/accounts/:id", s.getAccountHandler)
+	authRoutes.GET("/accounts", s.ListAccountsHandler)
+	authRoutes.POST("/transfer", s.transferHandler)
 
 	s.router = r
 }

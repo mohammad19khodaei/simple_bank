@@ -186,16 +186,17 @@ func TestLogin(t *testing.T) {
 		},
 	}
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdb.NewMockStore(ctrl)
+
+	server, err := api.NewServer(config, store)
+	require.NoError(t, err)
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store, tc.params)
-
-			server, err := api.NewServer(config, store)
-			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
 			jsonData, err := json.Marshal(tc.params)

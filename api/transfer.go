@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/mohammad19khodaei/simple_bank/api/middlewares"
 	db "github.com/mohammad19khodaei/simple_bank/db/sqlc"
 )
 
@@ -33,8 +34,14 @@ func (s *server) transferHandler(ctx *gin.Context) {
 		return
 	}
 
+	username := ctx.MustGet(middlewares.AuthUsernameKey).(string)
+	if fromAccount.Owner != username {
+		ctx.JSON(http.StatusForbidden, s.errorResponse(errors.New("forbidden: account does not belong to you")))
+		return
+	}
+
 	if fromAccount.Balance < request.Amount {
-		ctx.JSON(http.StatusPaymentRequired, s.errorResponse(fmt.Errorf("insufficient balance")))
+		ctx.JSON(http.StatusPaymentRequired, s.errorResponse(errors.New("insufficient balance")))
 		return
 	}
 
@@ -49,7 +56,7 @@ func (s *server) transferHandler(ctx *gin.Context) {
 	}
 
 	if fromAccount.Currency != toAccount.Currency {
-		ctx.JSON(http.StatusBadRequest, s.errorResponse(fmt.Errorf("from account currency %s mismatch to account currency %s", fromAccount.Currency, toAccount.Currency)))
+		ctx.JSON(http.StatusBadRequest, s.errorResponse(errors.New(fmt.Sprintf("from account currency %s mismatch to account currency %s", fromAccount.Currency, toAccount.Currency))))
 		return
 	}
 

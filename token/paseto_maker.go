@@ -1,6 +1,7 @@
 package token
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,7 +16,7 @@ type PasetoMaker struct {
 
 func NewPasetoMaker(secretKey string) (Maker, error) {
 	if len(secretKey) != chacha20poly1305.KeySize {
-		return nil, fmt.Errorf("invalid secret key size, must be exact %d characters", chacha20poly1305.KeySize)
+		return nil, errors.New(fmt.Sprintf("invalid secret key size, must be exact %d characters", chacha20poly1305.KeySize))
 	}
 
 	maker := &PasetoMaker{
