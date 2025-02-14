@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: simplebank_db
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: simple_bank
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "root", "-d", "simple_bank"]
+      interval: 5s
+      retries: 5
+      timeout: 3s
+
+  api:
+    build:
+      context: .
+    container_name: simplebank_api
+    ports:
+      - "8080:8080"
+    environment:
+      DB_SOURCE: postgres://root:secret@db:5432/simple_bank?sslmode=disable 
+    depends_on:
+      db:
+        condition: service_healthy
